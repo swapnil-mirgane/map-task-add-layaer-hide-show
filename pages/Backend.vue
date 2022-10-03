@@ -81,6 +81,7 @@
                   value="100"
                 />
               </td>
+              <td><button @click="deletedata(item.Id)">Delete</button></td>
             </li>
           </tr>
         </ul>
@@ -186,7 +187,7 @@ async function onMapLoaded(tempMap: mapboxgl.Map) {
   // data.map.on("draw.update", updateArea);
 
   async function updateArea(e) {
-    console.log(e.features[0].id);
+    console.log("all data" + e.features[0].id); // return id
     document.getElementById("fromDiv").style.display = "block";
     console.log("end");
 
@@ -229,11 +230,14 @@ async function onMapLoaded(tempMap: mapboxgl.Map) {
 //////////////////////////////////////// Togale function  this function is used to show and hide layears
 
 function toggle(e, index) {
-  console.log(data.backEndData[index]);
+  console.log(data.backEndData[index].Geom);
   console.log(data.backEndData[index].Id);
   console.log(e.target.checked);
   if (e.target.checked == true) {
     console.log(data.layears[index]);
+
+    console.log("get display", data.backEndData[index].Geom);
+
     data.map.addSource(data.backEndData[index].Id, {
       type: "geojson",
       data: data.backEndData[index].Geom,
@@ -250,17 +254,22 @@ function toggle(e, index) {
     });
 
     // let flylocation = data.layears[index].data.coordinates[0];
-    console.log(data.layears[index].data.geometry.coordinates[0][0]);
-    console.log(data.layears[index].data.geometry.type);
-    let type = data.layears[index].data.geometry.type;
+    console.log(data.backEndData[index].Geom);
+
+    console.log(data.backEndData[index].Geom.type);
+    let type = data.backEndData[index].Geom.type;
     if (type == "Point") {
-      let fly = data.layears[index].data.geometry.coordinates;
+      let fly = data.backEndData[index].Geom.coordinates;
+
+      const marker = new mapboxgl.Marker()
+        .setLngLat(data.backEndData[index].Geom.coordinates)
+        .addTo(data.map);
       randomFly(fly, type);
     } else if (type == "Polygon") {
-      let fly = data.layears[index].data.geometry.coordinates[0][0];
+      let fly = data.backEndData[index].Geom.coordinates[0][0];
       randomFly(fly, type);
     } else {
-      let fly = data.layears[index].data.geometry.coordinates[0];
+      let fly = data.backEndData[index].Geom.coordinates[0];
       randomFly(fly, type);
     }
     // randomFly(flylocation);
@@ -310,6 +319,12 @@ function randomFly(a, type) {
 async function getAllData() {
   const res: any = await $fetch("http://localhost:3001/geometry");
   data.backEndData = res;
+}
+async function deletedata(id) {
+  await $fetch(`http://localhost:3001/geometry/${id}`, {
+    method: "DELETE",
+  });
+  getAllData();
 }
 </script>
 <style scoped>
